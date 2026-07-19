@@ -1,0 +1,32 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <ItemGroup Label="Service Discovery (Consul)">
+    <PackageVersion Include="Consul" Version="1.8.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="MagicOnion (RPC)">
+    <PackageVersion Include="MagicOnion.Abstractions" Version="7.10.0" />
+    <PackageVersion Include="MagicOnion.Client" Version="7.10.0" />
+    <PackageVersion Include="Grpc.Net.Client" Version="2.80.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Entity Framework Core 10">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup Label="Authentication / JWT">
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
+    <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.18.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.18.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.18.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Misc">
+    <PackageVersion Include="MessagePack" Version="3.1.7" />
+  </ItemGroup>
+</Project>
