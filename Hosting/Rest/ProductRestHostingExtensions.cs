@@ -1,9 +1,9 @@
-using Platform.Common.Auth;
 using Platform.Common.Discovery;
-using Platform.Common.Identity;
 using Platform.Common.HealthChecks;
 using Platform.Common.Web;
+using Product.Common.Auth;
 using Product.Common.Discovery;
+using Product.Common.Identity;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +17,7 @@ public static class ProductRestHostingExtensions
     {
         builder.Services.AddGatewayForwardedAuth();
         builder.Services.AddCurrentAuth();
+        builder.Services.AddCurrentActor();
         builder.Services.AddPlatformJsonOptions();
         builder.Services.AddControllers();
         builder.AddServiceDiscovery();
