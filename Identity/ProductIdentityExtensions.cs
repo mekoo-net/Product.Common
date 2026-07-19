@@ -1,4 +1,4 @@
-using Product.Common.Identity;
+using Platform.Common.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Product.Common.Identity;

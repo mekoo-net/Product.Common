@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Platform.Common.Identity;
 using Product.Common.Identity;
 
 namespace Product.Common.Auth.Staff;
