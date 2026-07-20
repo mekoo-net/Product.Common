@@ -1,4 +1,4 @@
-using Platform.Common.Identity;
+using Product.Common.Identity;
 using Product.Common.PlatformServices;
 
 namespace Product.Common.Auth.Staff;

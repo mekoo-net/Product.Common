@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Platform.Common.Discovery;
 using Product.Common.Discovery;
 
 namespace Product.Common.Identity;

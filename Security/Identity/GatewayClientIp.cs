@@ -1,4 +1,5 @@
 using System.Net;
+using Platform.Common.Discovery;
 using Product.Common.Discovery;
 using Microsoft.AspNetCore.Http;
 
