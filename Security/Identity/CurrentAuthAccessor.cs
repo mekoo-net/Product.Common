@@ -24,12 +24,15 @@ public sealed class CurrentAuthAccessor : ICurrentAuth
 
     public bool IsAuthenticated => PrincipalUid is > 0;
 
+    public string? Actor => Ctx?.Request.Headers[ActorHeader].FirstOrDefault();
+
+    public string? UserId => Ctx?.Request.Headers[UserIdHeader].FirstOrDefault();
+
     public ActorType ActorType
     {
         get
         {
-            var raw = Ctx?.Request.Headers[ActorHeader].FirstOrDefault();
-            return raw switch
+            return Actor switch
             {
                 "user"   => ActorType.User,
                 "apikey" => ActorType.ApiKey,
@@ -40,7 +43,7 @@ public sealed class CurrentAuthAccessor : ICurrentAuth
     }
 
     public long? PrincipalUid
-        => long.TryParse(Ctx?.Request.Headers[UserIdHeader].FirstOrDefault(), out var v) && v > 0 ? v : null;
+        => long.TryParse(UserId, out var v) && v > 0 ? v : null;
 
     public long? IamUserUid
         => long.TryParse(Ctx?.Request.Headers[IamUidHeader].FirstOrDefault(), out var v) && v > 0 ? v : null;

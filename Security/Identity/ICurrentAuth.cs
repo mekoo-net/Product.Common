@@ -8,6 +8,12 @@ public interface ICurrentAuth
     bool IsAuthenticated { get; }
     ActorType ActorType { get; }
 
+    /// <summary>Gateway <c>X-Actor</c> raw header (<c>user</c> / <c>apikey</c> / <c>staff</c>).</summary>
+    string? Actor { get; }
+
+    /// <summary>Gateway <c>X-User-Id</c> raw header.</summary>
+    string? UserId { get; }
+
     /// <summary>Gateway <c>X-User-Id</c>：Account 域为 AccountUid，Staff 域为 StaffUid。</summary>
     long? PrincipalUid { get; }
 

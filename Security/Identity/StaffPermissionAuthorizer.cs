@@ -49,11 +49,7 @@ internal sealed class FusionCacheStaffPermissionAuthorizer : IStaffPermissionAut
     }
 
     public Task<bool> HasPermissionAsync(string permissionCode, CancellationToken ct = default)
-        => HasPermissionAsync(
-            _currentUser.ActorType == ActorType.Staff ? StaffActor : null,
-            _currentUser.StaffRole,
-            permissionCode,
-            ct);
+        => HasPermissionAsync(_currentUser.Actor, _currentUser.StaffRole, permissionCode, ct);
 
     public async Task<bool> HasPermissionAsync(string? actor, string? staffRole, string permissionCode, CancellationToken ct = default)
     {
