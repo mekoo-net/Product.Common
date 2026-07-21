@@ -8,17 +8,15 @@ using ZiggyCreatures.Caching.Fusion;
 namespace Product.Common.Identity;
 
 /// <summary>
-/// 跨服务的 Staff 权限校验。基�?X-Staff-Role header 解析当前 Staff 角色�?
-/// 通过 <see cref="IStaffRolePermissionSource"/> 拉取 role→permissions 映射，并�?FusionCache 缓存�?
+/// ???? Staff ??????? X-Staff-Role header ???? Staff ???
+/// ?? <see cref="IStaffRolePermissionSource"/> ?? role?permissions ????? FusionCache ???
 /// </summary>
 public interface IStaffPermissionAuthorizer
 {
     Task<bool> HasPermissionAsync(string permissionCode, CancellationToken ct = default);
-
-    Task<bool> HasPermissionAsync(string? actor, string? staffRole, string permissionCode, CancellationToken ct = default);
 }
 
-/// <summary>Staff role �?permission codes 数据源（由调用方注册，通常�?Keystone gRPC 客户端）�?/summary>
+/// <summary>Staff role ? permission codes ?????????????? Keystone gRPC ?????</summary>
 public interface IStaffRolePermissionSource
 {
     Task<IReadOnlyCollection<string>> GetPermissionsForStaffRoleAsync(string roleName, CancellationToken ct = default);
@@ -26,8 +24,6 @@ public interface IStaffRolePermissionSource
 
 internal sealed class FusionCacheStaffPermissionAuthorizer : IStaffPermissionAuthorizer
 {
-    private const string StaffActor = "staff";
-
     private readonly IFusionCache _cache;
     private readonly IStaffRolePermissionSource _source;
     private readonly ICurrentAuth _currentUser;
@@ -48,13 +44,11 @@ internal sealed class FusionCacheStaffPermissionAuthorizer : IStaffPermissionAut
         _logger = logger;
     }
 
-    public Task<bool> HasPermissionAsync(string permissionCode, CancellationToken ct = default)
-        => HasPermissionAsync(_currentUser.Actor, _currentUser.StaffRole, permissionCode, ct);
-
-    public async Task<bool> HasPermissionAsync(string? actor, string? staffRole, string permissionCode, CancellationToken ct = default)
+    public async Task<bool> HasPermissionAsync(string permissionCode, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(permissionCode)) return false;
-        if (!string.Equals(actor, StaffActor, StringComparison.OrdinalIgnoreCase)) return false;
+        if (!_currentUser.IsStaff) return false;
+        var staffRole = _currentUser.StaffRole;
         if (string.IsNullOrWhiteSpace(staffRole)) return false;
 
         var perms = await GetPermissionsAsync(staffRole.Trim(), ct);
@@ -87,8 +81,8 @@ internal sealed class FusionCacheStaffPermissionAuthorizer : IStaffPermissionAut
 public static class StaffPermissionAuthorizerExtensions
 {
     /// <summary>
-    /// 注册 Staff 权限校验�?+ permission authorization handler�?
-    /// 要求事先已调�?<c>AddPlatformCache</c>，并由调用方注册 <see cref="IStaffRolePermissionSource"/>�?
+    /// ?? Staff ????? + permission authorization handler?
+    /// ??????? <c>AddPlatformCache</c>???????? <see cref="IStaffRolePermissionSource"/>?
     /// </summary>
     public static IServiceCollection AddStaffPermissions(this IServiceCollection services)
     {
