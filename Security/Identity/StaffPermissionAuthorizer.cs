@@ -1,4 +1,4 @@
-using Product.Common.Authorization;
+﻿using Product.Common.Authorization;
 using Platform.Common.Caching;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -8,15 +8,15 @@ using ZiggyCreatures.Caching.Fusion;
 namespace Product.Common.Identity;
 
 /// <summary>
-/// ???? Staff ??????? X-Staff-Role header ???? Staff ???
-/// ?? <see cref="IStaffRolePermissionSource"/> ?? role?permissions ????? FusionCache ???
+/// 跨服务的 Staff 权限校验。基于 X-Staff-Role header 解析当前 Staff 角色，
+/// 通过 <see cref="IStaffRolePermissionSource"/> 拉取 role→permissions 映射，并用 FusionCache 缓存。
 /// </summary>
 public interface IStaffPermissionAuthorizer
 {
     Task<bool> HasPermissionAsync(string permissionCode, CancellationToken ct = default);
 }
 
-/// <summary>Staff role ? permission codes ?????????????? Keystone gRPC ?????</summary>
+/// <summary>Staff role → permission codes 数据源（由调用方注册，通常为 Keystone gRPC 客户端）。</summary>
 public interface IStaffRolePermissionSource
 {
     Task<IReadOnlyCollection<string>> GetPermissionsForStaffRoleAsync(string roleName, CancellationToken ct = default);
@@ -81,8 +81,8 @@ internal sealed class FusionCacheStaffPermissionAuthorizer : IStaffPermissionAut
 public static class StaffPermissionAuthorizerExtensions
 {
     /// <summary>
-    /// ?? Staff ????? + permission authorization handler?
-    /// ??????? <c>AddPlatformCache</c>???????? <see cref="IStaffRolePermissionSource"/>?
+    /// 注册 Staff 权限校验器 + permission authorization handler。
+    /// 要求事先已调用 <c>AddPlatformCache</c>，并由调用方注册 <see cref="IStaffRolePermissionSource"/>。
     /// </summary>
     public static IServiceCollection AddStaffPermissions(this IServiceCollection services)
     {

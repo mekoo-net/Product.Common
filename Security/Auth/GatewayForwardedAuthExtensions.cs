@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text.Encodings.Web;
 using Product.Common.Identity;
 using Microsoft.AspNetCore.Authentication;
@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 namespace Product.Common.Auth;
 
 /// <summary>
-/// ?????Bff ???? Gateway ????? header?????? JWT?
+/// 下游服务（Bff 等）：信任 Gateway 注入的身份 header，不再二次验 JWT。
 /// </summary>
 public static class GatewayForwardedAuthDefaults
 {
@@ -19,8 +19,8 @@ public static class GatewayForwardedAuthDefaults
 public static class GatewayForwardedAuthExtensions
 {
     /// <summary>
-    /// ? Gateway ??? <c>X-User-Id</c> / <c>X-Actor</c> ? header ?? <see cref="ClaimsPrincipal"/>?
-    /// ? <c>[Authorize]</c> ?????????? <see cref="ICurrentAuth"/> ????? header?
+    /// 将 Gateway 转发的 <c>X-User-Id</c> / <c>X-Actor</c> 等 header 构建 <see cref="ClaimsPrincipal"/>，
+    /// 供 <c>[Authorize]</c> 使用；业务身份仍通过 <see cref="ICurrentAuth"/> 读取同一组 header。
     /// </summary>
     public static IServiceCollection AddGatewayForwardedAuth(this IServiceCollection services)
     {
