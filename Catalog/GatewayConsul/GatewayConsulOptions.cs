@@ -8,5 +8,10 @@ public sealed class GatewayConsulOptions
     public string Address { get; set; } = "";
     public string? Token { get; set; }
     public string? Datacenter { get; set; }
-    public string KvPrefix { get; set; } = "demux";
+    /// <summary>
+    /// Prefix segment before <c>providers/{providerId}/catalog</c>.
+    /// Empty string ⇒ catalogs live at <c>providers/...</c> (no prefix segment).
+    /// Set explicitly in deployment config (e.g. <c>OneApi</c>).
+    /// </summary>
+    public string KvPrefix { get; set; } = "";
 }
