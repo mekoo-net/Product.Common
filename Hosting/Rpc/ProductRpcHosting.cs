@@ -26,6 +26,22 @@ public static class ProductRpcHosting
         return app.MapGroup(string.Empty).RequireLocalPort(port);
     }
 
+    /// <summary>
+    /// InternalRpc 端口的鉴权管线。与 <see cref="UseBackendRpcAuthPipeline{TMiddleware}"/> 同形，
+    /// 但那把 key 是签给外部运行时的，不能共用——见 <c>InternalRpcAuthOptions</c>。
+    ///
+    /// <para>挂在**端口**上而不是单个服务上：那个端口整体就是管理面（账单查询、供应商管理、
+    /// 定时任务触发都在上面），逐服务加注解迟早会漏掉新加的那个。</para>
+    /// </summary>
+    public static void UseInternalRpcAuthPipeline<TMiddleware>(WebApplication app)
+        where TMiddleware : class
+    {
+        var port = app.Configuration.GetKestrelEndpointPort(ProductKestrelExtensions.EndpointNames.InternalRpc);
+        app.UseWhen(
+            ctx => ctx.Connection.LocalPort == port,
+            branch => branch.UseMiddleware<TMiddleware>());
+    }
+
     public static RouteGroupBuilder MapInternalRpcGroup(WebApplication app)
     {
         var port = app.Configuration.GetKestrelEndpointPort(ProductKestrelExtensions.EndpointNames.InternalRpc);

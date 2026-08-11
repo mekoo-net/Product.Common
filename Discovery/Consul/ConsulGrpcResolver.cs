@@ -255,16 +255,19 @@ internal sealed class GrpcChannelFactory : IGrpcChannelFactory
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILoggerFactory _loggerFactory;
-    private readonly OutgoingContextPropagationFilter _contextFilter;
+    private readonly IClientFilter[] _filters;
 
     public GrpcChannelFactory(
         IServiceProvider serviceProvider,
         ILoggerFactory loggerFactory,
-        OutgoingContextPropagationFilter contextFilter)
+        OutgoingContextPropagationFilter contextFilter,
+        Platform.Common.Auth.InternalRpc.InternalRpcCredentialFilter credentialFilter)
     {
         _serviceProvider = serviceProvider;
         _loggerFactory = loggerFactory;
-        _contextFilter = contextFilter;
+        // 凭据 filter 排在身份透传之后：两者互不相干，但顺序固定下来便于抓包时对照。
+        // 未配置 InternalRpc key 时 credentialFilter 自己什么都不加，不需要在这里分支。
+        _filters = [contextFilter, credentialFilter];
     }
 
     public GrpcChannel CreateChannel(string serviceName)
@@ -274,5 +277,5 @@ internal sealed class GrpcChannelFactory : IGrpcChannelFactory
         => CreateClient<T>(CreateChannel(serviceName));
 
     public T CreateClient<T>(GrpcChannel channel) where T : IService<T>
-        => MagicOnionClient.Create<T>(channel, [_contextFilter]);
+        => MagicOnionClient.Create<T>(channel, _filters);
 }
