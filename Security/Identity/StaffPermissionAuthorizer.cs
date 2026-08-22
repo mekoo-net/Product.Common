@@ -47,6 +47,8 @@ internal sealed class FusionCacheStaffPermissionAuthorizer : IStaffPermissionAut
     public async Task<bool> HasPermissionAsync(string permissionCode, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(permissionCode)) return false;
+        if (_currentUser.ActorType == ActorType.ApiKey)
+            return _currentUser.Scopes.Contains(permissionCode, StringComparer.OrdinalIgnoreCase);
         if (!_currentUser.IsStaff) return false;
         var staffRole = _currentUser.StaffRole;
         if (string.IsNullOrWhiteSpace(staffRole)) return false;
