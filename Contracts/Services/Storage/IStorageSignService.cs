@@ -19,4 +19,7 @@ public interface IStorageSignService : IService<IStorageSignService>
 
     /// <summary>storage key → 当前后端配置下的公开访问 URL；key 无效返回 null。业务表只存 key，出口经此解析。</summary>
     UnaryResult<string?> ResolveUrlAsync(string storageKey);
+
+    /// <summary>放开引用。返回实际放开的条数。对象字节留在原地。</summary>
+    UnaryResult<int> ReleaseAsync(StorageReleaseCommand cmd);
 }
