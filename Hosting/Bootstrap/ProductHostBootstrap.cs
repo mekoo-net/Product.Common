@@ -1,3 +1,4 @@
+using Platform.Common.Auth.InternalRpc;
 using Platform.Common.Correlation;
 using Platform.Common.Observability;
 using Microsoft.AspNetCore.Builder;
@@ -66,6 +67,9 @@ public static class ProductHostBootstrap
             app.UseAuthentication();
             app.UseAuthorization();
             ProductRpcHosting.UseBackendRpcAuthPipeline<BackendRpcAuthMiddleware>(app);
+            // 管理面端口整体校验凭据；未配置 InternalRpc:Auth:HmacKeyBase64 时放行并记一次 warning
+            // （迁移态，见 InternalRpcAuthOptions）。签名器由 AddProductServiceClients 注册。
+            ProductRpcHosting.UseInternalRpcAuthPipeline<InternalRpcAuthMiddleware>(app);
 
             options.MapHttpEndpoints(app);
             options.MapBackendRpcEndpoints(app);
