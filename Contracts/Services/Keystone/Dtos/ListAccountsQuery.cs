@@ -16,8 +16,7 @@ public sealed class ListAccountsQuery
     /// <summary>"active" / "suspended" / "deleted" / null/"all" 不筛。</summary>
     [Key(5)] public string? Status { get; set; }
 
-    /// <summary>账户等级（1..5）；null 不筛。</summary>
-    [Key(6)] public int? Tier { get; set; }
+    // Key(6) 曾是账户等级筛选，已弃用，不要复用。
 
     /// <summary>成就/徽章 code；非空时只返回持有该徽章的账户。</summary>
     [Key(7)] public string? BadgeCode { get; set; }
