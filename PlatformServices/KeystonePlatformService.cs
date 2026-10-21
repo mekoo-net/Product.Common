@@ -1,6 +1,7 @@
 using Meeko.Contracts.Gateway.Auth;
 using Meeko.Contracts.Keystone;
 using Product.Common.Discovery;
+using Platform.Common.Discovery;
 
 namespace Product.Common.PlatformServices;
 
@@ -15,7 +16,7 @@ public sealed class KeystonePlatformService : PlatformServiceGroup
         GatewayAuth = CreateClient<IGatewayAuthService>();
     }
 
-    protected override string ConsulGroupName => "keystone";
+    protected override string ConsulGroupName => ServiceKeys.Keystone;
 
     public IKeystoneQueryService Query { get; }
     public IKeystoneAccountAdminService AccountAdmin { get; }

@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Platform.Common.Auth.InternalRpc;
-using Platform.Common.Discovery;
 
 namespace Product.Common.Discovery;
 
@@ -13,8 +12,8 @@ public static class ProductDiscoveryExtensions
     /// </summary>
     public static WebApplicationBuilder AddProductServiceClients(this WebApplicationBuilder builder)
     {
-        var section = builder.Configuration.GetSection(DiscoveryOptions.SectionName);
-        builder.Services.Configure<ProductDiscoveryOptions>(section);
+        builder.Services.Configure<ProductDiscoveryOptions>(
+            builder.Configuration.GetSection(ProductDiscoveryOptions.SectionName));
 
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<OutgoingContextPropagationFilter>();

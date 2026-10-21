@@ -7,10 +7,15 @@ using Product.Common.Discovery.Manifests;
 
 namespace Product.Common.Discovery;
 
+/// <summary>
+/// 把当前产品服务（Yomi/Tavern/ToApi/...）注册到 Consul 并维持心跳；
+/// 进程退出时尽力 deregister。Service Meta 同时携带 <see cref="ServiceRouteManifest"/> 编码的前缀路由表，
+/// 网关 watcher 通过 catalog 拉取后反序列化重建 YARP 路由。
+/// </summary>
 internal sealed class ConsulServiceRegistrar : IHostedService
 {
     private readonly IConsulClient _consul;
-    private readonly ServiceOptions _service;
+    private readonly LocalServiceInstance _self;
     private readonly GatewayManifestOptions _manifest;
     private readonly IReadOnlyList<ProductDeclaration> _products;
     private readonly IReadOnlyList<ScheduledTaskDeclaration> _schedules;
@@ -19,14 +24,12 @@ internal sealed class ConsulServiceRegistrar : IHostedService
 
     public ConsulServiceRegistrar(
         IConsulClient consul,
-        IOptions<DiscoveryOptions> discovery,
+        LocalServiceInstance self,
         IOptions<ProductDiscoveryOptions> productDiscovery,
         ILogger<ConsulServiceRegistrar> logger)
     {
         _consul = consul;
-        _service = discovery.Value.Service
-            ?? throw new InvalidOperationException(
-                "Discovery:Service section is required to register with Consul.");
+        _self = self;
         _manifest = productDiscovery.Value.Gateway;
         _products = productDiscovery.Value.Products;
         _schedules = productDiscovery.Value.Schedules;
@@ -35,28 +38,18 @@ internal sealed class ConsulServiceRegistrar : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(_service.Name))
-        {
-            throw new InvalidOperationException("Discovery:Service:Name must not be empty.");
-        }
-
-        if (!Uri.TryCreate(_service.Address, UriKind.Absolute, out var baseUri))
-        {
-            throw new InvalidOperationException(
-                $"Discovery:Service:Address ('{_service.Address}') is not a valid absolute URI.");
-        }
-
-        var serviceId = $"{_service.Name}@{Environment.MachineName}-{Environment.ProcessId}";
         var routesJson = ServiceRouteManifest.Encode(_manifest.Routes);
-        var healthUrl = BuildHealthCheckUrl(baseUri, _service.HealthCheck.Path);
-        var grpcUrl = ResolveGrpcUrl(baseUri);
+        var check = _self.CreateHealthCheck();
 
         var meta = new Dictionary<string, string>(StringComparer.Ordinal)
         {
             [ServiceRouteManifest.MetaKey] = routesJson,
-            [ServiceRouteManifest.BaseUrlMetaKey] = NormalizeBaseUrl(baseUri),
-            [ServiceRouteManifest.GrpcUrlMetaKey] = grpcUrl,
+            [ServiceRouteManifest.BaseUrlMetaKey] = _self.RestBaseUrl.ToString(),
         };
+        if (_self.GrpcBaseUrl is { } grpcUrl)
+        {
+            meta[ServiceRouteManifest.GrpcUrlMetaKey] = grpcUrl.GetLeftPart(UriPartial.Authority);
+        }
         if (_products.Count > 0)
         {
             meta[ProductCatalogManifest.MetaKey] = ProductCatalogManifest.Encode(_products);
@@ -68,35 +61,29 @@ internal sealed class ConsulServiceRegistrar : IHostedService
 
         var registration = new AgentServiceRegistration
         {
-            ID = serviceId,
-            Name = _service.Name,
-            Address = baseUri.Host,
-            Port = baseUri.Port,
+            ID = _self.Id,
+            Name = _self.Key,
+            Address = _self.Host,
+            Port = _self.RestBaseUrl.Port,
             Tags = ["meeko"],
             Meta = meta,
-            Check = new AgentServiceCheck
-            {
-                HTTP = healthUrl,
-                Interval = _service.HealthCheck.Interval,
-                Timeout = _service.HealthCheck.Timeout,
-                DeregisterCriticalServiceAfter = _service.HealthCheck.DeregisterAfter,
-            },
+            Check = check,
         };
 
         try
         {
             await _consul.Agent.ServiceRegister(registration, cancellationToken);
-            _registeredId = serviceId;
+            _registeredId = _self.Id;
             var prefixes = string.Join(", ", _manifest.Routes.Select(r => r.Prefix));
             _logger.LogInformation(
                 "Registered service '{Service}' (id={Id}) at {Address} with {RouteCount} route prefix(es) [{Prefixes}]; health={Health}; grpc={Grpc}",
-                _service.Name, serviceId, _service.Address, _manifest.Routes.Count, prefixes, healthUrl, grpcUrl);
+                _self.Key, _self.Id, _self.RestBaseUrl, _manifest.Routes.Count, prefixes, check.HTTP, _self.GrpcBaseUrl);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex,
-                "Best-effort Consul register failed for '{Service}' at {Consul}; service will still start",
-                _service.Name, baseUri);
+                "Best-effort Consul register failed for '{Service}' at {Address}; service will still start",
+                _self.Key, _self.RestBaseUrl);
         }
     }
 
@@ -116,26 +103,5 @@ internal sealed class ConsulServiceRegistrar : IHostedService
         {
             _logger.LogWarning(ex, "Best-effort Consul deregister failed for '{Id}'", _registeredId);
         }
-    }
-
-    private static string BuildHealthCheckUrl(Uri baseUri, string path)
-    {
-        var basePart = baseUri.GetLeftPart(UriPartial.Authority);
-        var trimmed = path.StartsWith('/') ? path : "/" + path;
-        return basePart + trimmed;
-    }
-
-    private static string NormalizeBaseUrl(Uri uri) =>
-        uri.GetLeftPart(UriPartial.Authority).TrimEnd('/') + "/";
-
-    private string ResolveGrpcUrl(Uri restBaseUri)
-    {
-        if (!string.IsNullOrWhiteSpace(_service.GrpcAddress)
-            && Uri.TryCreate(_service.GrpcAddress, UriKind.Absolute, out var explicitGrpc))
-        {
-            return explicitGrpc.GetLeftPart(UriPartial.Authority);
-        }
-
-        return ConsulGrpcAddress.DeriveGrpcUrl(restBaseUri);
     }
 }

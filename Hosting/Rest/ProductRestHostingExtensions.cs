@@ -11,9 +11,8 @@ namespace Product.Common.Hosting.Rest;
 
 public static class ProductRestHostingExtensions
 {
-    public static WebApplicationBuilder AddProductRestSurface(
-        this WebApplicationBuilder builder,
-        Action<DiscoveryOptions>? configureDiscovery = null)
+    /// <param name="serviceKey">本服务在 Consul 里的 <see cref="ServiceKeys"/>，写死在宿主代码里。</param>
+    public static WebApplicationBuilder AddProductRestSurface(this WebApplicationBuilder builder, string serviceKey)
     {
         builder.Services.AddGatewayForwardedAuth();
         builder.Services.AddCurrentAuth();
@@ -22,9 +21,7 @@ public static class ProductRestHostingExtensions
         builder.Services.AddControllers();
         builder.AddServiceDiscovery();
         builder.AddProductServiceClients();
-        builder.AddProductConsulRegistration();
-        if (configureDiscovery is not null)
-            builder.Services.PostConfigure(configureDiscovery);
+        builder.AddProductConsulRegistration(serviceKey);
         return builder;
     }
 

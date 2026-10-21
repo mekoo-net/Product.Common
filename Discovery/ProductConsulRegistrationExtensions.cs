@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Platform.Common.Discovery;
 
@@ -8,16 +7,14 @@ namespace Product.Common.Discovery;
 public static class ProductConsulRegistrationExtensions
 {
     /// <summary>
-    /// Product 服务向 Meeko Consul 注册（含 route/product manifest）。须在 AddServiceDiscovery 之后调用。
+    /// Product 服务以 <paramref name="serviceKey"/> 向 Meeko Consul 注册（含 route/product manifest）。
+    /// 须在 AddServiceDiscovery 之后调用。
     /// </summary>
-    public static WebApplicationBuilder AddProductConsulRegistration(this WebApplicationBuilder builder)
+    /// <param name="serviceKey">本服务的 <see cref="ServiceKeys"/>，调用方按它找实例。</param>
+    public static WebApplicationBuilder AddProductConsulRegistration(this WebApplicationBuilder builder, string serviceKey)
     {
-        var serviceName = builder.Configuration
-            .GetSection(DiscoveryOptions.SectionName)
-            .GetValue<string?>("Service:Name");
-
-        if (!string.IsNullOrWhiteSpace(serviceName))
-            builder.Services.AddHostedService<ConsulServiceRegistrar>();
+        builder.Services.AddSingleton(LocalServiceInstance.Resolve(serviceKey, builder.Configuration));
+        builder.Services.AddHostedService<ConsulServiceRegistrar>();
 
         return builder;
     }

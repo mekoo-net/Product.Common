@@ -1,5 +1,6 @@
 using Meeko.Contracts.Storage;
 using Product.Common.Discovery;
+using Platform.Common.Discovery;
 
 namespace Product.Common.PlatformServices;
 
@@ -11,7 +12,7 @@ public sealed class StoragePlatformService : PlatformServiceGroup
         Sign = CreateClient<IStorageSignService>();
     }
 
-    protected override string ConsulGroupName => "storage";
+    protected override string ConsulGroupName => ServiceKeys.Storage;
 
     public IStorageSignService Sign { get; }
 }

@@ -1,5 +1,6 @@
 using Meeko.Contracts.Billing;
 using Product.Common.Discovery;
+using Platform.Common.Discovery;
 
 namespace Product.Common.PlatformServices;
 
@@ -13,7 +14,7 @@ public sealed class BillingPlatformService : PlatformServiceGroup
         RechargeAdmin = CreateClient<IBillingRechargeAdminService>();
     }
 
-    protected override string ConsulGroupName => "billing";
+    protected override string ConsulGroupName => ServiceKeys.Billing;
 
     public IBillingMeteringService Metering { get; }
     public IBillingWalletService Wallet { get; }
