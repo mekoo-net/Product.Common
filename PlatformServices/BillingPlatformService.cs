@@ -12,11 +12,16 @@ public sealed class BillingPlatformService : PlatformServiceGroup
         Metering = CreateClient<IBillingMeteringService>();
         Wallet = CreateClient<IBillingWalletService>();
         RechargeAdmin = CreateClient<IBillingRechargeAdminService>();
+        _voucherIssue = new Lazy<IBillingVoucherIssueService>(CreateClient<IBillingVoucherIssueService>);
     }
+
+    // 只有自己发券的产品才用得到；按需创建，免得每个产品的测试通道替身都得认识它。
+    private readonly Lazy<IBillingVoucherIssueService> _voucherIssue;
 
     protected override string ConsulGroupName => ServiceKeys.Billing;
 
     public IBillingMeteringService Metering { get; }
     public IBillingWalletService Wallet { get; }
     public IBillingRechargeAdminService RechargeAdmin { get; }
+    public IBillingVoucherIssueService VoucherIssue => _voucherIssue.Value;
 }
