@@ -91,7 +91,7 @@ internal sealed class ConsulServiceRegistrar : IHostedService
             _logger.LogInformation(
                 "Registered service '{Service}' (id={Id}) at {Address} with {RouteCount} route prefix(es) [{Prefixes}]; health={Health}; grpc={Grpc}; world={World}",
                 _self.Key, _self.Id, _self.RestBaseUrl, _manifest.Routes.Count, prefixes, check.HTTP, _self.GrpcBaseUrl,
-                world is null ? "(none)" : $"{world.Key} as {world.ServiceName}");
+                world is null ? "(none)" : $"{world.Path} as {world.ServiceName}");
         }
         catch (Exception ex)
         {
