@@ -1,8 +1,10 @@
 using Consul;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Platform.Common.Discovery;
+using Platform.Common.Observability;
 using Product.Common.Discovery.Manifests;
 
 namespace Product.Common.Discovery;
@@ -19,20 +21,30 @@ internal sealed class ConsulServiceRegistrar : IHostedService
     private readonly GatewayManifestOptions _manifest;
     private readonly IReadOnlyList<ProductDeclaration> _products;
     private readonly IReadOnlyList<ScheduledTaskDeclaration> _schedules;
+    private readonly IConfiguration _configuration;
+    private readonly ObservabilityOptions? _observability;
     private readonly ILogger<ConsulServiceRegistrar> _logger;
     private string? _registeredId;
 
+    /// <param name="observability">
+    /// 走 <c>AddPlatformObservability</c> 的宿主才有；Yomi.Gateway 自己装配 OTel，没有这个单例，
+    /// 世界声明退回从 <paramref name="configuration"/> 读。
+    /// </param>
     public ConsulServiceRegistrar(
         IConsulClient consul,
         LocalServiceInstance self,
         IOptions<ProductDiscoveryOptions> productDiscovery,
-        ILogger<ConsulServiceRegistrar> logger)
+        IConfiguration configuration,
+        ILogger<ConsulServiceRegistrar> logger,
+        ObservabilityOptions? observability = null)
     {
         _consul = consul;
         _self = self;
         _manifest = productDiscovery.Value.Gateway;
         _products = productDiscovery.Value.Products;
         _schedules = productDiscovery.Value.Schedules;
+        _configuration = configuration;
+        _observability = observability;
         _logger = logger;
     }
 
@@ -58,6 +70,7 @@ internal sealed class ConsulServiceRegistrar : IHostedService
         {
             meta[ScheduleManifest.MetaKey] = ScheduleManifest.Encode(_schedules);
         }
+        var world = WorldServiceMeta.Write(meta, _configuration, _observability);
 
         var registration = new AgentServiceRegistration
         {
@@ -76,8 +89,9 @@ internal sealed class ConsulServiceRegistrar : IHostedService
             _registeredId = _self.Id;
             var prefixes = string.Join(", ", _manifest.Routes.Select(r => r.Prefix));
             _logger.LogInformation(
-                "Registered service '{Service}' (id={Id}) at {Address} with {RouteCount} route prefix(es) [{Prefixes}]; health={Health}; grpc={Grpc}",
-                _self.Key, _self.Id, _self.RestBaseUrl, _manifest.Routes.Count, prefixes, check.HTTP, _self.GrpcBaseUrl);
+                "Registered service '{Service}' (id={Id}) at {Address} with {RouteCount} route prefix(es) [{Prefixes}]; health={Health}; grpc={Grpc}; world={World}",
+                _self.Key, _self.Id, _self.RestBaseUrl, _manifest.Routes.Count, prefixes, check.HTTP, _self.GrpcBaseUrl,
+                world is null ? "(none)" : $"{world.Key} as {world.ServiceName}");
         }
         catch (Exception ex)
         {

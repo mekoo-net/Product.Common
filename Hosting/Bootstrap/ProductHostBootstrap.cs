@@ -20,6 +20,12 @@ public sealed class ProductHostOptions
     public Func<WebApplication, Task>? SeedAsync { get; init; }
     public required Action<WebApplication> MapHttpEndpoints { get; init; }
     public required Action<WebApplication> MapBackendRpcEndpoints { get; init; }
+
+    /// <summary>
+    /// 本服务在遥测控制台里归哪个世界的默认声明（<see cref="ObservabilityWorldOptions.Default"/>）。
+    /// yaml 的 <c>Observability:World</c> 写了 Key 就以 yaml 为准。null = 不归任何世界。
+    /// </summary>
+    public ObservabilityWorldOptions? World { get; init; }
 }
 
 public static class ProductHostBootstrap
@@ -46,7 +52,12 @@ public static class ProductHostBootstrap
                 reloadOnChange: true);
 #endif
 
-            builder.AddPlatformObservability(o => o.ServiceName = options.ServiceName);
+            builder.AddPlatformObservability(o =>
+            {
+                o.ServiceName = options.ServiceName;
+                if (options.World is { Key: { } key } world)
+                    o.World.Default(key, world.Label ?? key, world.CaptureNamespace, world.InsightService);
+            });
             builder.UsePlatformSerilog();
 
             options.ConfigureServices(builder);
