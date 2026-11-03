@@ -1,5 +1,6 @@
 using Consul;
 using Microsoft.Extensions.Logging;
+using Platform.Common.Discovery;
 
 namespace Product.Common.Discovery;
 

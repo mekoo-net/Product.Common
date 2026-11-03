@@ -12,9 +12,6 @@ public static class ProductDiscoveryExtensions
     /// </summary>
     public static WebApplicationBuilder AddProductServiceClients(this WebApplicationBuilder builder)
     {
-        builder.Services.Configure<ProductDiscoveryOptions>(
-            builder.Configuration.GetSection(ProductDiscoveryOptions.SectionName));
-
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddSingleton<OutgoingContextPropagationFilter>();
 

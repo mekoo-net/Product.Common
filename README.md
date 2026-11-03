@@ -26,10 +26,10 @@
 | EF 迁移 | `ProductDatabaseHosting.MigrateAsync<TContext>()` |
 | 宿主启动 | `ProductHostBootstrap.RunAsync()` |
 | 三端口 Kestrel（Http / InternalRpc / BackendRpc） | `GetKestrelEndpointPort()` / `RequireLocalPort()`；端口只写在 yaml，代码里不写数字 |
-| REST 面 | `AddProductRestSurface()` / `AddProductStaffSurface()` / `MapProductHttpEndpoints()` |
+| REST 面 | `AddProductRestSurface(serviceKey)`（含 Consul 注册，见 Platform.Common 的 `RoutedServiceRegistration`）/ `MapProductHttpEndpoints()` |
 | RPC 端口托管与鉴权 | `ProductRpcHosting`（`MapInternalRpcGroup` / `MapBackendRpcGroup` 及对应鉴权管线） |
 | BackendRpc HMAC 鉴权 | `AddBackendRpcAuth()` / `AddBackendRpcCredentialAuth()` |
-| 服务发现与注册 | `AddProductServiceClients()` / `AddProductConsulRegistration(serviceKey)` |
+| 服务发现 | `AddProductServiceClients()`；注册由 `AddProductRestSurface` 调 Platform.Common 的 `AddRoutedServiceRegistration` |
 | 调 Billing / Keystone / Storage | `AddBillingPlatformService()` / `AddKeystonePlatformService()` / `AddStoragePlatformService()` |
 | 预占计费 | `AddReservationMeteringOptions()` |
 | Gateway Consul 与模型目录 KV | `AddGatewayConsul()` / `GatewayConsulPaths` / `ProviderCatalogWire` |

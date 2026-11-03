@@ -11,6 +11,11 @@ namespace Product.Common.Hosting.Rest;
 
 public static class ProductRestHostingExtensions
 {
+    /// <summary>
+    /// 产品服务对外的 REST 面：网关转发的身份、控制器、Consul 客户端栈，以及以 <paramref name="serviceKey"/>
+    /// 注册进 Consul（<see cref="RoutedServiceRegistration"/>，和平台服务同一种注册）。
+    /// 计费产品、定时任务由宿主 PostConfigure <see cref="ServiceDiscoveryOptions"/> 声明。
+    /// </summary>
     /// <param name="serviceKey">本服务在 Consul 里的 <see cref="ServiceKeys"/>，写死在宿主代码里。</param>
     public static WebApplicationBuilder AddProductRestSurface(this WebApplicationBuilder builder, string serviceKey)
     {
@@ -21,13 +26,7 @@ public static class ProductRestHostingExtensions
         builder.Services.AddControllers();
         builder.AddServiceDiscovery();
         builder.AddProductServiceClients();
-        builder.AddProductConsulRegistration(serviceKey);
-        return builder;
-    }
-
-    public static WebApplicationBuilder AddProductStaffSurface(this WebApplicationBuilder builder)
-    {
-        builder.Services.AddCurrentActor();
+        builder.AddRoutedServiceRegistration(serviceKey);
         return builder;
     }
 

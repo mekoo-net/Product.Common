@@ -1,4 +1,5 @@
 using Consul;
+using Platform.Common.Discovery;
 
 namespace Product.Common.Discovery;
 
